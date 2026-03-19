@@ -3,6 +3,7 @@ import { InjectRepository} from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
 import { Room } from "./entities/room.entity";
+import { CreateRoomDto } from "./dto/create-room.dto";
 
 @Injectable()
 export class RoomService {
@@ -15,8 +16,15 @@ export class RoomService {
         return this.roomRepository.find();
     }
 
-    create(data: Partial<Room>) {
+    create(data: CreateRoomDto) {
         const room = this.roomRepository.create(data);
         return this.roomRepository.save(room);
+    }
+
+    findByFloor(floorId: string) {
+        return this.roomRepository.find({
+            where: { floor_id: floorId },
+            order: { name: 'ASC' },
+        });
     }
 }

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from "typeorm";
 import { Notification } from "src/modules/notifications/entities/notification.entity";
 import { HouseStaff } from "src/modules/houses/entities/house-staff.entity";
 import { RoomUser } from "src/modules/rooms/entities/room-user.entity";
@@ -26,7 +26,7 @@ export class User {
     @Column()
     password: string;
 
-    @Column()
+    @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;
 
     // Relations

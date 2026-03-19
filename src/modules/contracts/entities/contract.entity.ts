@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Room } from 'src/modules/rooms/entities/room.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
@@ -25,10 +25,10 @@ export class Contract {
     @Column('decimal')
     deposit_amount: number;
 
-    @Column()
+    @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;
     
-    @Column()
+    @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     updated_at: Date;
 
     // Relations

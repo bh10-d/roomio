@@ -1,10 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { House } from 'src/modules/houses/entities/house.entity';
+// import { House } from 'src/modules/houses/entities/house.entity';
 import { Bill } from 'src/modules/bills/entities/bill.entity';
 import { RoomUser } from './room-user.entity';
 import { Contract } from 'src/modules/contracts/entities/contract.entity';
 import { MeterReading } from 'src/modules/meters/entities/meter-reading.entity';
 import { MaintenanceRequest } from 'src/modules/maintenance/entities/maintenance-request.entity';
+import { Floor } from 'src/modules/floors/entities/floor.entity';
 
 @Entity('rooms')
 export class Room {
@@ -12,7 +13,7 @@ export class Room {
     id: string;
 
     @Column('uuid')
-    house_id: string;
+    floor_id: string;
 
     @Column()
     name: string;
@@ -27,9 +28,13 @@ export class Room {
     status: string;
 
     // Relations
-    @ManyToOne(() => House, (house) => house.rooms)
-    @JoinColumn({ name: 'house_id' })
-    house: House;
+    // @ManyToOne(() => House, (house) => house.rooms)
+    // @JoinColumn({ name: 'house_id' })
+    // house: House;
+
+    @ManyToOne(() => Floor, (floor) => floor.rooms)
+    @JoinColumn({ name: 'floor_id' })
+    floor: Floor;
 
     @OneToMany(() => Bill, (bill) => bill.room)
     bills: Bill[];

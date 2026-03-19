@@ -14,6 +14,7 @@ import { BillModule } from './modules/bills/bill.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { MetersModule } from './modules/meters/meters.module';
+import { FloorModule } from './modules/floors/floors.module';
 
 @Module({
   imports: [
@@ -23,14 +24,16 @@ import { MetersModule } from './modules/meters/meters.module';
     }),
     RedisModule,
     DatabaseModule,
-    RoomModule,
-    HouseModule,
     UserModule,
+    HouseModule,
+    FloorModule,
+    RoomModule,
     ContractModule,
     BillModule,
     NotificationsModule,
     MaintenanceModule,
     MetersModule,
+    FloorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

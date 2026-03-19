@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { RoomService } from './room.service';
+import { CreateRoomDto } from './dto/create-room.dto';
 
 @Controller('rooms')
 export class RoomController {
@@ -10,8 +11,13 @@ export class RoomController {
         return this.roomService.findAll();
     }
 
+    @Get('floor/:floorId')
+    findByFloor(@Param('floorId') floorId: string) {
+        return this.roomService.findByFloor(floorId);
+    }
+
     @Post()
-    create(@Body() body: any) {
+    create(@Body() body: CreateRoomDto) {
         return this.roomService.create(body);
     }
 }
