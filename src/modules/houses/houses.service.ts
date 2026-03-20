@@ -1,21 +1,12 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository} from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
 import { House } from "./entities/house.entity";
 import { CreateHouseDto } from "./dto/create-house.dto";
-import { HouseResponseDto, HouseSummaryResponseDto, HouseTreeResponseDto } from "./dto/response-house.dto";
-
-type HouseSummary = {
-    id: string;
-    name: string;
-    address: string;
-    landlord_id: string;
-    total_floors: number;
-    total_rooms: number;
-    available_rooms: number;
-    occupied_rooms: number;
-}
+import { HouseResponseDto, HouseSummaryResponseDto, HouseSummaryResponseQueryDto, HouseTreeResponseDto } from "./dto/response-house.dto";
+import { UpdateHouseDto } from "./dto/update-house.dto";
+import { ListHouseQueryDto } from "./dto/ListHouseQuery.dto";
 
 @Injectable()
 export class HouseService {
@@ -24,7 +15,21 @@ export class HouseService {
         private houseRepository: Repository<House>,
     ) {}
 
-    private buildSummaryQuery(landlordId?: string) {
+    private buildSummaryQuery(landlordId?: string, query?: ListHouseQueryDto) {
+        const page =  query?.page || 1;
+        const limit = query?.limit || 5;
+        const search = query?.search?.trim();
+        const sortBy = query?.sortBy ?? 'created_at';
+        const sortOrder = query?.sortOrder ?? 'DESC';
+
+        const sortMap = {
+            name: 'house.name',
+            address: 'house.address',
+            created_at: 'house.created_at',
+        }
+
+        const sortColumn = sortMap[sortBy] ?? 'house.created_at';
+
         const qb = this.houseRepository
         .createQueryBuilder('house')
         .leftJoin('house.floors', 'floor')
@@ -43,6 +48,7 @@ export class HouseService {
             `COALESCE(SUM(CASE WHEN room.status = 'occupied' THEN 1 ELSE 0 END), 0)`,
             'occupied_rooms',
         )
+        .addSelect('COUNT(*) OVER()', 'total_count')
         .groupBy('house.id')
         .addGroupBy('house.name')
         .addGroupBy('house.address')
@@ -52,17 +58,18 @@ export class HouseService {
         if (landlordId) {
             qb.where('house.landlord_id = :landlordId', { landlordId });
         }
+
+        if (search) {
+            qb.andWhere('(house.name ILIKE :search OR house.address ILIKE :search)', {
+                search: `%${search}%`,
+            });
+        }
+
+        qb.orderBy(sortColumn, sortOrder);
+        qb.offset((page - 1) * limit);
+        qb.limit(limit);
         return qb;
     }
-
-    // private toResponse(house: House): HouseResponseDto {
-    //     return {
-    //         id: house.id,
-    //         landlord_id: house.landlord_id,
-    //         name: house.name,
-    //         address: house.address,
-    //     };
-    // }
 
     private toSummaryResponse(row: any): HouseSummaryResponseDto {
         return {
@@ -97,14 +104,50 @@ export class HouseService {
         };
     }
 
-    async findAllSummary(): Promise<HouseSummaryResponseDto[]> {
-        const rows = await this.buildSummaryQuery().getRawMany();
-        return rows.map(row => this.toSummaryResponse(row));
+    async findOne(id: string): Promise<HouseResponseDto> {
+        const house = await this.houseRepository.findOne({ where: {id} });
+        if (!house) {
+            throw new NotFoundException('House not found');
+        }
+
+        return house;
     }
 
-    async findByLandLordSummary(landlordId: string): Promise<HouseSummaryResponseDto[]> {
-        const rows = await this.buildSummaryQuery(landlordId).getRawMany();
-        return rows.map(row => this.toSummaryResponse(row));
+    async findAllSummary(query: ListHouseQueryDto): Promise<HouseSummaryResponseQueryDto> {
+        const page = query?.page || 1;
+        const limit = query?.limit || 10;
+        const rows = await this.buildSummaryQuery(undefined, query).getRawMany();
+        const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+
+        return {
+            data: rows.map(row => this.toSummaryResponse(row)),
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: total > 0 ? Math.ceil(total / limit) : 0,
+            },
+        };
+        // return rows.map(row => this.toSummaryResponse(row));
+    }
+
+    async findByLandLordSummary(landlordId: string, query: ListHouseQueryDto): Promise<HouseSummaryResponseQueryDto> {
+        const page = query?.page || 1;
+        const limit = query?.limit || 10;
+        const rows = await this.buildSummaryQuery(landlordId, query).getRawMany();
+        const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+
+        return {
+            data: rows.map(row => this.toSummaryResponse(row)),
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: total > 0 ? Math.ceil(total / limit) : 0,
+            },
+        };
+        // const rows = await this.buildSummaryQuery(landlordId, query).getRawMany();
+        // return rows.map(row => this.toSummaryResponse(row));
     }
 
     async findOneTree(id: string): Promise<HouseTreeResponseDto> {
@@ -120,40 +163,32 @@ export class HouseService {
         return this.toTreeResponse(house);
     }
 
-    // async findAll(): Promise<HouseResponseDto[]> {
-    //     const house = await this.houseRepository.find({ relations: ['floors'] });
-    //     return house.map((h) => this.toResponse(h));
-    // }
-
     create(data: CreateHouseDto) {
         const house = this.houseRepository.create(data);
         return this.houseRepository.save(house);
     }
 
-    // async findOneTree(id: string) {
-    //     const house = await this.houseRepository.findOne({
-    //         where: {id},
-    //         relations: ['floors', 'floors.rooms'],
-    //         order: {
-    //             floors: { floor_no: 'ASC' }
-    //         },
-    //     });
+    async update(id: string, data: UpdateHouseDto) {
+        const house = await this.houseRepository.findOne({ where: { id } });
 
-    //     if(!house) {
-    //         throw new Error('House not found');
-    //     }
+        if (!house) {
+            throw new NotFoundException('House not found');
+        }
 
-    //     return house;
-    // }
+        const updatedHouse = this.houseRepository.merge(house, data);
+        return this.houseRepository.save(updatedHouse);
+    }
 
-    // async findOne(landlordId: string) {
-    //     const house = await this.houseRepository.find({
-    //         where: {landlord_id: landlordId},
-    //         order: { created_at: 'DESC' }
-    //     });
-    //     if (!house) {
-    //         throw new Error('House not found');
-    //     }
-    //     return house;
-    // }
+    async delete(id: string) {
+        const result = await this.houseRepository.delete(id);
+
+        if (!result.affected) {
+            throw new NotFoundException('House not found');
+        }
+
+        return {
+            message: 'Delete house successfully',
+            id,
+        };
+    }
 }

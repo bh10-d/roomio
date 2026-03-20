@@ -16,6 +16,16 @@ export class HouseSummaryResponseDto {
     occupied_rooms: number;
 }
 
+export class HouseSummaryResponseQueryDto {
+    data: HouseSummaryResponseDto[];
+    meta: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}
+
 export class RoomLiteDto {
     id: string;
     name: string;

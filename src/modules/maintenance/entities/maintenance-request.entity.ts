@@ -29,7 +29,7 @@ export class MaintenanceRequest {
     updated_at: Date;
 
     // Relations
-    @ManyToOne(() => Room, (room) => room.maintenanceRequests)
+    @ManyToOne(() => Room, (room) => room.maintenanceRequests, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'room_id' })
     room: Room;
 

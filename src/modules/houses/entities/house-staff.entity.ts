@@ -17,7 +17,7 @@ export class HouseStaff {
     role: string;
 
     // Relations
-    @ManyToOne(() => House, (house) => house.staff)
+    @ManyToOne(() => House, (house) => house.staff, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'house_id' })
     house: House;
 

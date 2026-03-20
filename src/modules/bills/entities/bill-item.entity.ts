@@ -28,7 +28,7 @@ export class BillItem {
     updated_at: Date;
 
     // Relations
-    @ManyToOne(() => Bill, (bill) => bill.billItems)
+    @ManyToOne(() => Bill, (bill) => bill.billItems, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'bill_id' })
     bill: Bill;
 }

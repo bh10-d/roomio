@@ -32,7 +32,7 @@ export class Contract {
     updated_at: Date;
 
     // Relations
-    @ManyToOne(() => Room, (room) => room.contracts)
+    @ManyToOne(() => Room, (room) => room.contracts, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'room_id' })
     room: Room;
 

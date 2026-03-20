@@ -22,7 +22,7 @@ export class MeterReading {
     month: Date;
 
     // Relations
-    @ManyToOne(() => Room, (room) => room.meterReadings)
+    @ManyToOne(() => Room, (room) => room.meterReadings, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'room_id' })
     room: Room;
 }

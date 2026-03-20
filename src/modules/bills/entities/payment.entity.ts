@@ -28,7 +28,7 @@ export class Payment {
     status: string;
 
     // Relations
-    @ManyToOne(() => Bill, (bill) => bill.payments)
+    @ManyToOne(() => Bill, (bill) => bill.payments, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'bill_id' })
     bill: Bill;
 }

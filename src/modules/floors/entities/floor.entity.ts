@@ -23,7 +23,7 @@ export class Floor {
     @OneToMany(() => Room, (room) => room.floor)
     rooms: Room[];
 
-    @ManyToOne(() => House, (house) => house.floors)
+    @ManyToOne(() => House, (house) => house.floors, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'house_id' })
     house: House;
 }

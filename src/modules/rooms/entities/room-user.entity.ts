@@ -26,7 +26,7 @@ export class RoomUser {
     updated_at: Date;
 
     // Relations
-    @ManyToOne(() => Room, (room) => room.roomUsers)
+    @ManyToOne(() => Room, (room) => room.roomUsers, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'room_id' })
     room: Room;
 

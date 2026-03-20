@@ -32,7 +32,7 @@ export class Room {
     // @JoinColumn({ name: 'house_id' })
     // house: House;
 
-    @ManyToOne(() => Floor, (floor) => floor.rooms)
+    @ManyToOne(() => Floor, (floor) => floor.rooms, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'floor_id' })
     floor: Floor;
 
