@@ -13,7 +13,7 @@ export class ListHouseQueryDto {
     @IsInt()
     @Min(1)
     @Max(100)
-    limit: number = 5;
+    limit: number = 10;
     
     @IsOptional()
     @IsString()

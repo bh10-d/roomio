@@ -5,6 +5,8 @@ import { HouseResponseDto, HouseSummaryResponseDto, HouseSummaryResponseQueryDto
 import { UpdateHouseDto } from './dto/update-house.dto';
 import { ListHouseQueryDto } from './dto/ListHouseQuery.dto';
 import { ApiQuery } from '@nestjs/swagger';
+import { CreateHouseStaffDto } from './dto/create-house-staff.dto';
+import { UpdateHouseStaffDto } from './dto/update-house-staff.dto';
 
 @Controller('houses')
 export class HouseController {
@@ -20,8 +22,8 @@ export class HouseController {
         return this.houseService.findAllSummary(query);
     }
 
-    @Get(':id')
-    findOne(@Param('id')id: string): Promise<HouseResponseDto> {
+    @Get(':house_id')
+    findOne(@Param('house_id') id: string): Promise<HouseResponseDto> {
         return this.houseService.findOne(id);
     }
     
@@ -35,8 +37,8 @@ export class HouseController {
         return this.houseService.findByLandLordSummary(landlordId, query);
     }
 
-    @Get(':id/tree')
-    findOneTree(@Param('id') id: string): Promise<HouseTreeResponseDto | null> {
+    @Get(':house_id/tree')
+    findOneTree(@Param('house_id') id: string): Promise<HouseTreeResponseDto | null> {
         return this.houseService.findOneTree(id);
     }
 
@@ -45,13 +47,47 @@ export class HouseController {
         return this.houseService.create(body);
     }
 
-    @Put(':id')
-    update(@Param('id')id: string, @Body() body: UpdateHouseDto) {
+    @Put(':house_id')
+    update(@Param('house_id') id: string, @Body() body: UpdateHouseDto) {
         return this.houseService.update(id, body);
     }
 
-    @Delete(':id')
-    delete(@Param('id') id: string) {
+    @Delete(':house_id')
+    delete(@Param('house_id') id: string) {
         return this.houseService.delete(id);
+    }
+
+    // GET /houses/:house_id/staff
+    @Get(':house_id/staff')
+    getHouseStaff(@Param('house_id') houseId: string) {
+        return this.houseService.getHouseStaff(houseId);
+    }
+
+    // POST /houses/:house_id/staff
+    @Post(':house_id/staff')
+    addStaff(
+        @Param('house_id') houseId: string,
+        @Body() body: CreateHouseStaffDto,
+    ) {
+        return this.houseService.addStaffToHouse(houseId, body);
+    }
+
+    // PUT /houses/:house_id/staff/:staffId
+    @Put(':house_id/staff/:staffId')
+    updateStaff(
+        @Param('house_id') houseId: string,
+        @Param('staffId') staffId: string,
+        @Body() body: UpdateHouseStaffDto,
+    ) {
+        return this.houseService.updateHouseStaff(houseId, staffId, body);
+    }
+
+    // DELETE /houses/:house_id/staff/:staffId
+    @Delete(':house_id/staff/:staffId')
+    removeStaff(
+        @Param('house_id') houseId: string,
+        @Param('staffId') staffId: string,
+    ) {
+        return this.houseService.removeStaffFromHouse(houseId, staffId);
     }
 }

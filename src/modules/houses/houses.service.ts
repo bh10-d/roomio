@@ -7,17 +7,26 @@ import { CreateHouseDto } from "./dto/create-house.dto";
 import { HouseResponseDto, HouseSummaryResponseDto, HouseSummaryResponseQueryDto, HouseTreeResponseDto } from "./dto/response-house.dto";
 import { UpdateHouseDto } from "./dto/update-house.dto";
 import { ListHouseQueryDto } from "./dto/ListHouseQuery.dto";
+import { HouseStaffResponseDto } from "./dto/response-house-staff.dto";
+import { HouseStaff } from "./entities/house-staff.entity";
+import { CreateHouseStaffDto } from "./dto/create-house-staff.dto";
+import { UpdateHouseStaffDto } from "./dto/update-house-staff.dto";
+import { User } from "../users/entities/user.entity";
 
 @Injectable()
 export class HouseService {
     constructor(
         @InjectRepository(House)
         private houseRepository: Repository<House>,
+        @InjectRepository(HouseStaff)
+        private houseStaffRepository: Repository<HouseStaff>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
     ) {}
 
     private buildSummaryQuery(landlordId?: string, query?: ListHouseQueryDto) {
         const page =  query?.page || 1;
-        const limit = query?.limit || 5;
+        const limit = query?.limit || 10;
         const search = query?.search?.trim();
         const sortBy = query?.sortBy ?? 'created_at';
         const sortOrder = query?.sortOrder ?? 'DESC';
@@ -158,7 +167,7 @@ export class HouseService {
         });
 
         if (!house) {
-            throw new Error('House not found');
+            throw new NotFoundException('House not found');
         }
         return this.toTreeResponse(house);
     }
@@ -190,5 +199,98 @@ export class HouseService {
             message: 'Delete house successfully',
             id,
         };
+    }
+
+    async getHouseStaff(houseId: string): Promise<HouseStaffResponseDto[]> {
+        const house = await this.houseRepository.findOne({
+            where: { id: houseId }
+        });
+
+        if (!house) {
+            throw new NotFoundException('House not found');
+        }
+
+        const staff = await this.houseStaffRepository.find({
+            where: { house_id: houseId },
+        });
+
+        return staff;
+    }
+
+    async addStaffToHouse(
+        houseId: string,
+        data: CreateHouseStaffDto
+    ): Promise<HouseStaffResponseDto> {
+        const house = await this.houseRepository.findOne({
+            where: { id: houseId }
+        });
+
+        if (!house) {
+            throw new NotFoundException('House not found');
+        }
+
+        const user = await this.userRepository.findOne({
+            where: { id: data.user_id }
+        });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        const houseStaff = this.houseStaffRepository.create({
+            ...data,
+            house_id: houseId
+        });
+
+        await this.houseStaffRepository.save(houseStaff);
+
+        return houseStaff;
+    }
+
+    async updateHouseStaff(houseId: string, staffId: string, data: UpdateHouseStaffDto): Promise<HouseStaffResponseDto> {
+        const house = await this.houseRepository.findOne({
+            where : { id: houseId}
+        });
+
+        if (!house) {
+            throw new NotFoundException('House not found');
+        }
+
+        const staff = await this.houseStaffRepository.findOne({
+            where: { id: staffId, house_id: houseId }
+        });
+
+        if (!staff) {
+            throw new NotFoundException('Staff not found in this house');
+        }
+
+        const updatedStaff = this.houseStaffRepository.merge(staff, data);
+        await this.houseStaffRepository.save(updatedStaff);
+
+        return updatedStaff;
+    }
+
+
+    async removeStaffFromHouse(houseId: string, staffId: string): Promise<{ message: string }> {
+        const house = await this.houseRepository.findOne({
+            where: { id: houseId }
+        })
+
+        if (!house) {
+            throw new NotFoundException('House not found');
+        }
+
+        const staff = await this.houseStaffRepository.findOne({
+            where: { id: staffId, house_id: houseId }
+        });
+
+        if (!staff) {
+            throw new NotFoundException('Staff not found in this house');
+        }
+
+        await this.houseStaffRepository.remove(staff);
+
+        return { message: 'Staff removed from house successfully' };
+
     }
 }

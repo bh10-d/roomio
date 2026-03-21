@@ -4,8 +4,8 @@ import { User } from 'src/modules/users/entities/user.entity';
 
 @Entity('house_staff')
 export class HouseStaff {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column('uuid')
     house_id: string;
