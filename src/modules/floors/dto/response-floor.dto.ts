@@ -12,5 +12,5 @@ export class FloorResponseDto {
     house_id: string;
     floor_no: number;
     // name: string;
-    // rooms: FloorRoomResponseDto[];
+    rooms: FloorRoomResponseDto[];
 }
