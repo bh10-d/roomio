@@ -27,13 +27,13 @@ export class HouseController {
         return this.houseService.findOne(id);
     }
     
-    @Get('/landlord/:landlordId')
+    @Get('/landlord/:landlord_id')
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 5 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'sunrise' })
     @ApiQuery({ name: 'sortBy', required: false, enum: ['name', 'address', 'created_at'] })
     @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'] })
-    findByLandLordSummary(@Param('landlordId') landlordId: string, @Query() query: ListHouseQueryDto): Promise<HouseSummaryResponseQueryDto> {
+    findByLandLordSummary(@Param('landlord_id') landlordId: string, @Query() query: ListHouseQueryDto): Promise<HouseSummaryResponseQueryDto> {
         return this.houseService.findByLandLordSummary(landlordId, query);
     }
 
@@ -72,21 +72,21 @@ export class HouseController {
         return this.houseService.addStaffToHouse(houseId, body);
     }
 
-    // PUT /houses/:house_id/staff/:staffId
-    @Put(':house_id/staff/:staffId')
+    // PUT /houses/:house_id/staff/:staff_id
+    @Put(':house_id/staff/:staff_id')
     updateStaff(
         @Param('house_id') houseId: string,
-        @Param('staffId') staffId: string,
+        @Param('staff_id') staffId: string,
         @Body() body: UpdateHouseStaffDto,
     ) {
         return this.houseService.updateHouseStaff(houseId, staffId, body);
     }
 
-    // DELETE /houses/:house_id/staff/:staffId
-    @Delete(':house_id/staff/:staffId')
+    // DELETE /houses/:house_id/staff/:staff_id
+    @Delete(':house_id/staff/:staff_id')
     removeStaff(
         @Param('house_id') houseId: string,
-        @Param('staffId') staffId: string,
+        @Param('staff_id') staffId: string,
     ) {
         return this.houseService.removeStaffFromHouse(houseId, staffId);
     }
