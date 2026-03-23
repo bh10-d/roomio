@@ -20,6 +20,8 @@ const MIN_FLOORS_PER_HOUSE = 2;
 const MAX_FLOORS_PER_HOUSE = 3;
 const MIN_ROOMS_PER_FLOOR = 2;
 const MAX_ROOMS_PER_FLOOR = 4;
+const OCCUPIED_ROOM_RATE = 0.6;
+const BILL_MONTHS_PER_OCCUPIED_ROOM = 3;
 const runTag = Date.now();
 
 const dataSource = new DataSource({
@@ -139,111 +141,147 @@ async function seed(): Promise<void> {
         }
     }
 
+    const occupiedRoomCount = Math.max(1, Math.floor(rooms.length * OCCUPIED_ROOM_RATE));
+    const shuffledRooms = [...rooms].sort(() => Math.random() - 0.5);
+    const occupiedRooms = shuffledRooms.slice(0, occupiedRoomCount);
+    const occupiedRoomIds = new Set(occupiedRooms.map((room) => room.id));
+
+    for (let i = 0; i < rooms.length; i += 1) {
+        rooms[i].status = occupiedRoomIds.has(rooms[i].id) ? 'occupied' : 'available';
+    }
+    await roomRepo.save(rooms);
+
     const roomUsers: RoomUser[] = [];
     const tenants = users.filter((u) => u.role === 'tenant');
-    for (let i = 0; i < COUNT; i += 1) {
-        const room = pickRandom(rooms);
-        const tenant = pickRandom(tenants);
-        const start = new Date();
-        start.setDate(start.getDate() - i * 2);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 6);
-
-        const row = roomUserRepo.create({
-            room_id: room.id,
-            user_id: tenant.id,
-            start_date: start,
-            end_date: end,
-            created_at: start,
-            updated_at: start,
-        });
-        roomUsers.push(await roomUserRepo.save(row));
-    }
-
     const contracts: Contract[] = [];
-    for (let i = 0; i < COUNT; i += 1) {
-        const link = roomUsers[i % roomUsers.length];
+    const bills: Bill[] = [];
+    for (let i = 0; i < occupiedRooms.length; i += 1) {
+        const room = occupiedRooms[i];
+        const tenant = tenants[i % tenants.length];
+
         const start = new Date();
-        start.setDate(start.getDate() - 30 - i);
+        start.setDate(start.getDate() - randomInt(20, 120));
         const end = new Date(start);
         end.setMonth(end.getMonth() + 12);
 
-        const contract = contractRepo.create({
-            room_id: link.room_id,
-            tenant_id: link.user_id,
-            start_date: start,
-            end_date: end,
-            status: 'active',
-            deposit_amount: 3000000 + i * 100000,
-        });
-        contracts.push(await contractRepo.save(contract));
-    }
-
-    const bills: Bill[] = [];
-    for (let i = 0; i < COUNT; i += 1) {
-        const room = rooms[i % rooms.length];
-        const bill = billRepo.create({
-            room_id: room.id,
-            month: monthAt(i),
-            total_amount: 2500000 + i * 120000,
-            status: i % 2 === 0 ? 'pending' : 'paid',
-        });
-        bills.push(await billRepo.save(bill));
-    }
-
-    for (let i = 0; i < COUNT; i += 1) {
-        const bill = bills[i % bills.length];
-        await billItemRepo.save(
-            billItemRepo.create({
-                bill_id: bill.id,
-                type: i % 2 === 0 ? 'rent' : 'electric',
-                amount: 2000000 + i * 100000,
-                unit_price: i % 2 === 0 ? 1 : 3500,
-                quantity: i % 2 === 0 ? 1 : 150 + i,
-            }),
-        );
-    }
-
-    for (let i = 0; i < COUNT; i += 1) {
-        const bill = bills[i % bills.length];
-        await paymentRepo.save(
-            paymentRepo.create({
-                bill_id: bill.id,
-                amount: 1000000 + i * 100000,
-                payment_date: new Date(),
-                method: i % 2 === 0 ? 'cash' : 'bank_transfer',
-                status: i % 3 === 0 ? 'pending' : 'success',
-            }),
-        );
-    }
-
-    for (let i = 0; i < COUNT; i += 1) {
-        const room = rooms[i % rooms.length];
-        await meterRepo.save(
-            meterRepo.create({
+        const roomUser = await roomUserRepo.save(
+            roomUserRepo.create({
                 room_id: room.id,
-                type: i % 2 === 0 ? 'electric' : 'water',
-                previous_reading: 100 + i * 10,
-                current_reading: 130 + i * 10,
-                month: monthAt(i),
+                user_id: tenant.id,
+                start_date: start,
+                end_date: end,
+                created_at: start,
+                updated_at: start,
             }),
         );
-    }
+        roomUsers.push(roomUser);
 
-    for (let i = 0; i < COUNT; i += 1) {
-        const link = roomUsers[i % roomUsers.length];
-        const now = new Date();
-        await maintenanceRepo.save(
-            maintenanceRepo.create({
-                room_id: link.room_id,
-                tenant_id: link.user_id,
-                title: `Maintenance #${i + 1}`,
-                description: 'Need support for room issue',
-                status: i % 2 === 0 ? 'pending' : 'in_progress',
-                created_at: now,
-                updated_at: now,
+        const contract = await contractRepo.save(
+            contractRepo.create({
+                room_id: room.id,
+                tenant_id: tenant.id,
+                start_date: start,
+                end_date: end,
+                status: 'active',
+                deposit_amount: 3000000 + i * 100000,
             }),
         );
+        contracts.push(contract);
+
+        for (let monthOffset = 0; monthOffset < BILL_MONTHS_PER_OCCUPIED_ROOM; monthOffset += 1) {
+            const month = monthAt(-monthOffset);
+            const electricQty = randomInt(90, 180);
+            const waterQty = randomInt(10, 25);
+            const electricUnitPrice = 3500;
+            const waterUnitPrice = 18000;
+            const electricAmount = electricQty * electricUnitPrice;
+            const waterAmount = waterQty * waterUnitPrice;
+            const rentAmount = Number(room.price);
+            const totalAmount = rentAmount + electricAmount + waterAmount;
+            const billStatus = monthOffset === 0 && i % 2 === 0 ? 'pending' : 'paid';
+
+            const bill = await billRepo.save(
+                billRepo.create({
+                    room_id: room.id,
+                    month,
+                    total_amount: totalAmount,
+                    status: billStatus,
+                }),
+            );
+            bills.push(bill);
+
+            await billItemRepo.save(
+                billItemRepo.create({
+                    bill_id: bill.id,
+                    type: 'rent',
+                    amount: rentAmount,
+                    unit_price: 1,
+                    quantity: 1,
+                }),
+            );
+            await billItemRepo.save(
+                billItemRepo.create({
+                    bill_id: bill.id,
+                    type: 'electric',
+                    amount: electricAmount,
+                    unit_price: electricUnitPrice,
+                    quantity: electricQty,
+                }),
+            );
+            await billItemRepo.save(
+                billItemRepo.create({
+                    bill_id: bill.id,
+                    type: 'water',
+                    amount: waterAmount,
+                    unit_price: waterUnitPrice,
+                    quantity: waterQty,
+                }),
+            );
+
+            await paymentRepo.save(
+                paymentRepo.create({
+                    bill_id: bill.id,
+                    amount: billStatus === 'paid' ? totalAmount : Math.floor(totalAmount * 0.6),
+                    payment_date: new Date(),
+                    method: i % 2 === 0 ? 'cash' : 'bank_transfer',
+                    status: billStatus === 'paid' ? 'success' : 'pending',
+                }),
+            );
+
+            await meterRepo.save(
+                meterRepo.create({
+                    room_id: room.id,
+                    type: 'electric',
+                    previous_reading: 1000 + i * 100 + monthOffset * 120,
+                    current_reading: 1000 + i * 100 + monthOffset * 120 + electricQty,
+                    month,
+                }),
+            );
+            await meterRepo.save(
+                meterRepo.create({
+                    room_id: room.id,
+                    type: 'water',
+                    previous_reading: 200 + i * 20 + monthOffset * 15,
+                    current_reading: 200 + i * 20 + monthOffset * 15 + waterQty,
+                    month,
+                }),
+            );
+        }
+
+        if (i % 2 === 0) {
+            const now = new Date();
+            await maintenanceRepo.save(
+                maintenanceRepo.create({
+                    room_id: room.id,
+                    tenant_id: tenant.id,
+                    title: `Maintenance #${i + 1}`,
+                    description: 'Need support for room issue',
+                    status: i % 4 === 0 ? 'pending' : 'in_progress',
+                    created_at: now,
+                    updated_at: now,
+                }),
+            );
+        }
     }
 
     for (let i = 0; i < COUNT; i += 1) {
