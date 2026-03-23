@@ -148,12 +148,12 @@ export class FloorService {
         }
     }
 
-    async findOne(id: string): Promise<FloorResponseDto> {
+    async findOne(id: string): Promise<{data: FloorResponseDto[]}> {
         const floor = await this.floorRepository.findOne({ where: { id }, relations: ['rooms'] });
         if (!floor) {
             throw new NotFoundException('Floor not found');
         }
-        return this.toResponse(floor);
+        return { data: [this.toResponse(floor)] };
     }
 
     async create(data: CreateFloorDto): Promise<FloorResponseDto> {

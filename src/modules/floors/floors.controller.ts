@@ -21,7 +21,7 @@ export class FloorController {
     }
 
     @Get(':floor_id')
-    findOne(@Param('floor_id') floorId: string): Promise<FloorResponseDto> {
+    findOne(@Param('floor_id') floorId: string): Promise<{ data: FloorResponseDto[]}> {
         return this.floorService.findOne(floorId);
     }
 
