@@ -5,9 +5,10 @@ import { RoomService } from './room.service';
 import { RoomController } from './room.controller';
 import { Room } from './entities/room.entity';
 import { RoomUser } from './entities/room-user.entity';
+import { Floor } from '../floors/entities/floor.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Room, RoomUser])],
+    imports: [TypeOrmModule.forFeature([Room, RoomUser, Floor])],
     controllers: [RoomController],
     providers: [RoomService],
 })
