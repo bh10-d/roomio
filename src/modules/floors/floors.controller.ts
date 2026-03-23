@@ -20,8 +20,8 @@ export class FloorController {
         return this.floorService.findAllSummary(query);
     }
 
-    @Get(':floorId')
-    findOne(@Param('floorId') floorId: string): Promise<FloorResponseDto> {
+    @Get(':floor_id')
+    findOne(@Param('floor_id') floorId: string): Promise<FloorResponseDto> {
         return this.floorService.findOne(floorId);
     }
 
@@ -30,13 +30,13 @@ export class FloorController {
     //     return this.floorService.findByHouse(houseId);
     // }
 
-    @Get('house/:houseId')
+    @Get('house/:house_id')
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 5 })
     // @ApiQuery({ name: 'search', required: false, type: String, example: '' })
     @ApiQuery({ name: 'sortBy', required: false, enum: ['floor_no', 'created_at'] })
     @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'] })
-    findByHouseSummary(@Param('houseId') houseId: string, @Query() query: ListFloorQueryDto) {
+    findByHouseSummary(@Param('house_id') houseId: string, @Query() query: ListFloorQueryDto) {
         return this.floorService.findByHouseSummary(houseId, query);
     }
 
@@ -45,13 +45,13 @@ export class FloorController {
         return this.floorService.create(body);
     }
 
-    @Put(':floorId')
-    update(@Param('floorId') floorId: string, @Body() body: UpdateFloorDto): Promise<FloorResponseDto> {
+    @Put(':floor_id')
+    update(@Param('floor_id') floorId: string, @Body() body: UpdateFloorDto): Promise<FloorResponseDto> {
         return this.floorService.update(floorId, body);
     }
 
-    @Delete(':floorId')
-    delete(@Param('floorId') floorId: string) {
+    @Delete(':floor_id')
+    delete(@Param('floor_id') floorId: string) {
         return this.floorService.delete(floorId);
     }
 }
