@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsIn, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+
+export const CONTRACT_STATUSES = ['draft', 'active', 'expired', 'terminated'] as const;
 
 export class CreateContractDto {
   @ApiProperty({ format: 'uuid' })
@@ -19,10 +21,10 @@ export class CreateContractDto {
   @IsDateString()
   end_date: string;
 
-  @ApiProperty({ example: 'active' })
-  @IsString()
-  @IsNotEmpty()
-  status: string;
+  @ApiProperty({ example: 'active', enum: CONTRACT_STATUSES, required: false })
+  @IsOptional()
+  @IsIn(CONTRACT_STATUSES)
+  status?: string;
 
   @ApiProperty({ example: 5000000 })
   @Type(() => Number)
