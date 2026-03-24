@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { RedisModule } from './database/redis.module';
@@ -35,7 +33,5 @@ import { FloorModule } from './modules/floors/floors.module';
     MetersModule,
     FloorModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
