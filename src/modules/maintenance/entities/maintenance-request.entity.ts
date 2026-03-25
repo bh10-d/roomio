@@ -4,8 +4,8 @@ import { User } from 'src/modules/users/entities/user.entity';
 
 @Entity('maintenance_requests')
 export class MaintenanceRequest {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column('uuid')
     room_id: string;
