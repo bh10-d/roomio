@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
+import redis from './config/redis.config';
 import { RedisModule } from './database/redis.module';
 
 import { DatabaseModule } from './database/database.module';
@@ -18,7 +19,7 @@ import { FloorModule } from './modules/floors/floors.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
+      load: [configuration, redis],
     }),
     RedisModule,
     DatabaseModule,
