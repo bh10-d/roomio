@@ -3,8 +3,8 @@ import { Room } from 'src/modules/rooms/entities/room.entity';
 
 @Entity('meter_readings')
 export class MeterReading {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column('uuid')
     room_id: string;
