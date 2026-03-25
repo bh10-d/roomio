@@ -3,8 +3,8 @@ import { User } from 'src/modules/users/entities/user.entity';
 
 @Entity('notifications')
 export class Notification {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column('uuid')
     user_id: string;
