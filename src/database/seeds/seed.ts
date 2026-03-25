@@ -65,6 +65,12 @@ function monthAt(offset: number): Date {
     return d;
 }
 
+function ensureStringId(entityName: string, id: unknown): asserts id is string {
+    if (typeof id !== 'string' || id.trim().length === 0) {
+        throw new Error(`Seed expected ${entityName}.id to be string UUID, received: ${String(id)}`);
+    }
+}
+
 async function seed(): Promise<void> {
     await dataSource.initialize();
 
@@ -155,6 +161,9 @@ async function seed(): Promise<void> {
     const tenants = users.filter((u) => u.role === 'tenant');
     const contracts: Contract[] = [];
     const bills: Bill[] = [];
+    const meterReadings: MeterReading[] = [];
+    const maintenanceRequests: MaintenanceRequest[] = [];
+    const notifications: Notification[] = [];
     for (let i = 0; i < occupiedRooms.length; i += 1) {
         const room = occupiedRooms[i];
         const tenant = tenants[i % tenants.length];
@@ -248,7 +257,7 @@ async function seed(): Promise<void> {
                 }),
             );
 
-            await meterRepo.save(
+            const electricMeter = await meterRepo.save(
                 meterRepo.create({
                     room_id: room.id,
                     type: 'electric',
@@ -257,7 +266,10 @@ async function seed(): Promise<void> {
                     month,
                 }),
             );
-            await meterRepo.save(
+            ensureStringId('MeterReading', electricMeter.id);
+            meterReadings.push(electricMeter);
+
+            const waterMeter = await meterRepo.save(
                 meterRepo.create({
                     room_id: room.id,
                     type: 'water',
@@ -266,11 +278,13 @@ async function seed(): Promise<void> {
                     month,
                 }),
             );
+            ensureStringId('MeterReading', waterMeter.id);
+            meterReadings.push(waterMeter);
         }
 
         if (i % 2 === 0) {
             const now = new Date();
-            await maintenanceRepo.save(
+            const maintenance = await maintenanceRepo.save(
                 maintenanceRepo.create({
                     room_id: room.id,
                     tenant_id: tenant.id,
@@ -281,12 +295,14 @@ async function seed(): Promise<void> {
                     updated_at: now,
                 }),
             );
+            ensureStringId('MaintenanceRequest', maintenance.id);
+            maintenanceRequests.push(maintenance);
         }
     }
 
     for (let i = 0; i < COUNT; i += 1) {
         const user = users[i % users.length];
-        await notificationRepo.save(
+        const notification = await notificationRepo.save(
             notificationRepo.create({
                 user_id: user.id,
                 title: `Notification #${i + 1}`,
@@ -296,6 +312,8 @@ async function seed(): Promise<void> {
                 type: i % 2 === 0 ? 'system' : 'bill',
             }),
         );
+        ensureStringId('Notification', notification.id);
+        notifications.push(notification);
     }
 
     for (let i = 0; i < COUNT; i += 1) {
@@ -311,7 +329,7 @@ async function seed(): Promise<void> {
     }
 
     console.log(
-        `Seed success: users=${users.length}, houses=${houses.length}, floors=${floors.length}, rooms=${rooms.length}, others~${COUNT}`,
+        `Seed success: users=${users.length}, houses=${houses.length}, floors=${floors.length}, rooms=${rooms.length}, roomUsers=${roomUsers.length}, contracts=${contracts.length}, bills=${bills.length}, meterReadings=${meterReadings.length}, maintenance=${maintenanceRequests.length}, notifications=${notifications.length}`,
     );
     await dataSource.destroy();
 }
