@@ -28,10 +28,9 @@ import { FloorModule } from './modules/floors/floors.module';
     RoomModule,
     ContractModule,
     BillModule,
-    NotificationsModule,
-    MaintenanceModule,
     MetersModule,
-    FloorModule,
+    MaintenanceModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}
