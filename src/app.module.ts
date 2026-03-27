@@ -14,6 +14,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { MetersModule } from './modules/meters/meters.module';
 import { FloorModule } from './modules/floors/floors.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FloorModule } from './modules/floors/floors.module';
     }),
     RedisModule,
     DatabaseModule,
+    AuthModule,
     UserModule,
     HouseModule,
     FloorModule,
