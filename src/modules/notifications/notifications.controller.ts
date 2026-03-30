@@ -5,7 +5,9 @@ import { ListNotificationQueryDto } from './dto/ListNotificationQuery.dto';
 import { NotificationResponseDto } from './dto/response-notification.dto';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
 
+@Roles('admin') // Only users with 'admin' role can access these routes
 @Controller('notifications')
 export class NotificationsController {
     constructor(private readonly notificationsService: NotificationsService) {}
@@ -21,21 +23,25 @@ export class NotificationsController {
     }
 
     @Get(':notification_id')
+    @Roles('admin', 'landlord', 'tenant') // 'admin', 'landlord', and 'tenant' roles can access this route
     findOne(@Param('notification_id') notificationId: string): Promise<{data: NotificationResponseDto}> {
         return this.notificationsService.findOne(notificationId);
     }
 
     @Post()
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     create(@Body() body: CreateNotificationDto) {
         return this.notificationsService.create(body);
     }
 
     @Put(':notification_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     update(@Param('notification_id') notificationId: string, @Body() body: UpdateNotificationDto) {
         return this.notificationsService.update(notificationId, body);
     }
 
     @Delete(':notification_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     delete(@Param('notification_id') notificationId: string) {
         return this.notificationsService.delete(notificationId);
     }

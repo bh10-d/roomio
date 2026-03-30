@@ -5,7 +5,9 @@ import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { ListBillQueryDto } from './dto/ListBillQuery.dto';
 import { BillResponseDto } from './dto/response-bill.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
 
+@Roles('admin') // Only users with 'admin' role can access these routes
 @Controller('bills')
 export class BillController {
     constructor(private readonly billService: BillService) {}
@@ -21,21 +23,25 @@ export class BillController {
     }
 
     @Get(':bill_id')
+    @Roles('admin', 'landlord', 'tenant') // 'admin', 'landlord', and 'tenant' roles can access this route
     findOne(@Param('bill_id') billId: string): Promise<{data: BillResponseDto}> {
         return this.billService.findOne(billId);
     }
 
     @Post()
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     create(@Body() body: CreateBillDto) {
         return this.billService.create(body);
     }
 
     @Put(':bill_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     update(@Param('bill_id') billId: string, @Body() body: UpdateBillDto) {
         return this.billService.update(billId, body);
     }
 
     @Delete(':bill_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     delete(@Param('bill_id') billId: string) {
         return this.billService.delete(billId);
     }

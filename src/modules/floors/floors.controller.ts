@@ -5,7 +5,9 @@ import { FloorResponseDto } from './dto/response-floor.dto';
 import { UpdateFloorDto } from './dto/update-floor.dto';
 import { ApiQuery } from '@nestjs/swagger';
 import { ListFloorQueryDto } from './dto/ListFloorQuery.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
 
+@Roles('admin') // Only users with 'admin' role can access these routes
 @Controller('floors')
 export class FloorController {
     constructor(private readonly floorService: FloorService) {}
@@ -21,6 +23,7 @@ export class FloorController {
     }
 
     @Get(':floor_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     findOne(@Param('floor_id') floorId: string): Promise<{ data: FloorResponseDto[]}> {
         return this.floorService.findOne(floorId);
     }
@@ -31,6 +34,7 @@ export class FloorController {
     // }
 
     @Get('house/:house_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 5 })
     // @ApiQuery({ name: 'search', required: false, type: String, example: '' })
@@ -41,16 +45,19 @@ export class FloorController {
     }
 
     @Post()
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     create(@Body() body: CreateFloorDto): Promise<FloorResponseDto> {
         return this.floorService.create(body);
     }
 
     @Put(':floor_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     update(@Param('floor_id') floorId: string, @Body() body: UpdateFloorDto): Promise<FloorResponseDto> {
         return this.floorService.update(floorId, body);
     }
 
     @Delete(':floor_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     delete(@Param('floor_id') floorId: string) {
         return this.floorService.delete(floorId);
     }

@@ -29,16 +29,19 @@ export class UserController {
     }
 
     @Post()
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     create(@Body() body: CreateUserDto) {
         return this.userService.create(body);
     }
 
     @Put(':user_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     update(@Param('user_id') userId: string, @Body() body: UpdateUserDto) {
         return this.userService.update(userId, body);
     }
 
     @Delete(':user_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     delete(@Param('user_id') userId: string) {
         return this.userService.delete(userId);
     }

@@ -5,7 +5,9 @@ import { UpdateContractDto } from './dto/update-contract.dto';
 import { ListContractQueryDto } from './dto/ListContractQuery.dto';
 import { ApiQuery } from '@nestjs/swagger';
 import { ContractResponseDto } from './dto/response-contract.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
 
+@Roles('admin') // Only users with 'admin' role can access these routes
 @Controller('contracts')
 export class ContractController {
     constructor(private readonly contractService: ContractService) {}
@@ -26,16 +28,19 @@ export class ContractController {
     }
 
     @Get(':contract_id')
+    @Roles('admin', 'landlord', 'tenant') // 'admin', 'landlord', and 'tenant' roles can access this route
     findOne(@Param('contract_id') contractId: string): Promise<{data: ContractResponseDto}> {
         return this.contractService.findOne(contractId);
     }
 
     @Post()
+    @Roles('admin', 'lanlord') // Both 'admin' and 'landlord' roles can access this route
     create(@Body() body: CreateContractDto) {
         return this.contractService.create(body);
     }
 
     @Put(':contract_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     update(
         @Param('contract_id') contractId: string,
         @Body() body: UpdateContractDto,
@@ -44,6 +49,7 @@ export class ContractController {
     }
 
     @Delete(':contract_id')
+    @Roles('admin', 'landlord') // Both 'admin' and 'landlord' roles can access this route
     delete(@Param('contract_id') contractId: string) {
         return this.contractService.delete(contractId);
     }
