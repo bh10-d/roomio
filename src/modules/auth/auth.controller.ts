@@ -13,6 +13,7 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -99,6 +100,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   async login(
     @Body() body: LoginDto,
     @Req() req: Request,
@@ -122,6 +124,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Public()
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -161,6 +164,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @Public()
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     // Logout is cookie-only: revoke current session via refresh-token cookie, no manual token payload.
     const refreshToken = this.getCookieValue(req, this.refreshCookieName);
@@ -176,6 +180,7 @@ export class AuthController {
   }
 
   @Post('logout-all')
+  @Public()
   async logoutAll(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,

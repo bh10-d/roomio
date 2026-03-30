@@ -6,16 +6,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Redis from 'ioredis';
 import { UserSession } from '../entities/user-session.entity';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
+    private readonly reflector: Reflector,
     private readonly JwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject('REDIS CLIENT') private readonly redis: Redis,
@@ -56,6 +59,16 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // When handler/class has @Public(), skip JWT validation for this request.
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
+    // For all non-public routes, enforce Bearer access token validation.
     const request = context.switchToHttp().getRequest();
     const authHeader = String(request.headers.authorization || '');
     const token = authHeader
